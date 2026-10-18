@@ -33,7 +33,7 @@ cp .env.example .env          # defaults work out of the box
 docker compose up -d --build
 ```
 
-Then open **http://localhost:3000**. The stack starts in **demo mode** (`DEMO_MODE=1` in
+Then open **<http://localhost:3000>**. The stack starts in **demo mode** (`DEMO_MODE=1` in
 `.env`): sign in with any username and password, and the dashboard shows four fake cameras
 (`rtsp://192.0.2.x` — RFC 5737 documentation addresses) with sample analytics. No real
 cameras or RTSP streams are contacted.
@@ -44,31 +44,29 @@ cameras or RTSP streams are contacted.
 
 1. Edit `.env`: set `POSTGRES_PASSWORD`, `SECRET_KEY`, `JWT_SECRET_KEY`, and `DEMO_MODE=0`.
 2. Start the recorder worker too (it is excluded from demo mode):
+
    ```bash
    docker compose --profile live up -d --build
    ```
+
    Set `RTSP_URL` in `.env` to a reachable `rtsp://` URL.
 3. Create the first admin (there is **no** default account):
+
    ```bash
    curl -X POST http://localhost:5000/api/auth/register \
         -H 'Content-Type: application/json' \
         -d '{"username": "admin", "password": "change-me-please"}'
    ```
-4. Sign in at http://localhost:3000 with those credentials.
 
-| Service  | Default port             | Notes                          |
-|----------|--------------------------|--------------------------------|
-| Frontend | `FRONTEND_PORT` (3000)   | React SPA served by nginx      |
-| Backend  | `BACKEND_PORT` (5000)    | Flask API, `/health` endpoint  |
-| Postgres | internal 5432            | not published to the host      |
-| Redis    | internal 6379            | not published to the host      |
-| FFmpeg   | internal 8080            | `--profile live` only          |
+4. Sign in at <http://localhost:3000> with those credentials.
 
-## Screenshots
-
-| Dashboard | Timeline | Login |
-|---|---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Timeline](docs/screenshots/timeline.png) | ![Login](docs/screenshots/login.png) |
+| Service  | Default port           | Notes                         |
+| -------- | ---------------------- | ----------------------------- |
+| Frontend | `FRONTEND_PORT` (3000) | React SPA served by nginx     |
+| Backend  | `BACKEND_PORT` (5000)  | Flask API, `/health` endpoint |
+| Postgres | internal 5432          | not published to the host     |
+| Redis    | internal 6379          | not published to the host     |
+| FFmpeg   | internal 8080          | `--profile live` only         |
 
 ## Features
 
