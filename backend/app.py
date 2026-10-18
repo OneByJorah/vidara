@@ -107,6 +107,15 @@ def verify_password(password, hashed):
 @app.route("/api/auth/login", methods=["POST"])
 @limiter.limit("10 per minute")
 def login():
+    if DEMO_MODE:
+        data = request.get_json(silent=True) or {}
+        username = (data.get("username") or "demo").strip() or "demo"
+        token = create_access_token(identity="demo")
+        return jsonify({
+            "access_token": token,
+            "token_type": "Bearer",
+            "user": {"id": 0, "username": username, "role": "admin"},
+        })
     try:
         data = request.get_json()
         username = data.get("username", "").strip()
@@ -168,6 +177,11 @@ def register():
 @app.route("/api/auth/me", methods=["GET"])
 @jwt_required()
 def get_current_user():
+    if DEMO_MODE:
+        return jsonify({
+            "id": 0, "username": "demo", "role": "admin",
+            "is_active": True, "created_at": None,
+        })
     user_id = get_jwt_identity()
     db = get_db()
     try:
@@ -226,6 +240,8 @@ def logout():
 @jwt_required()
 @limiter.limit("30 per minute")
 def get_streams():
+    if DEMO_MODE:
+        return jsonify({"streams": DEMO_STREAMS})
     user_id = get_jwt_identity()
     db = get_db()
     try:
@@ -583,6 +599,8 @@ def delete_schedule(schedule_id):
 @jwt_required()
 @limiter.limit("10 per minute")
 def get_analytics_overview():
+    if DEMO_MODE:
+        return jsonify(DEMO_ANALYTICS)
     user_id = get_jwt_identity()
     db = get_db()
     try:
@@ -646,9 +664,41 @@ def list_backups():
 
 
 # ===== HEALTH CHECK =====
+# ===== DEMO MODE =====
+# When DEMO_MODE=1 the backend serves obviously-fake data (RFC 5737 192.0.2.x
+# addresses) and accepts any login, so the UI can be explored without a real
+# database, real cameras, or real RTSP streams.
+DEMO_MODE = os.getenv("DEMO_MODE", "0") == "1"
+
+DEMO_STREAMS = [
+    {"id": 1, "name": "Front Door (demo)", "url": "rtsp://192.0.2.10:554/live/frontdoor", "is_active": True},
+    {"id": 2, "name": "Back Yard (demo)", "url": "rtsp://192.0.2.11:554/live/backyard", "is_active": True},
+    {"id": 3, "name": "Loading Dock (demo)", "url": "rtsp://192.0.2.12:554/live/dock", "is_active": False},
+    {"id": 4, "name": "Lobby Cam (demo)", "url": "rtsp://192.0.2.13:554/live/lobby", "is_active": True},
+]
+
+DEMO_EVENTS = [
+    {"type": "motion", "count": 42},
+    {"type": "audio", "count": 7},
+    {"type": "person_detected", "count": 13},
+]
+
+DEMO_ANALYTICS = {
+    "streams": {"total": 4, "active": 3},
+    "recordings": {"total": 18, "total_seconds": 22950.0},
+    "events": DEMO_EVENTS,
+    "daily_recordings": [
+        {"day": "Mon", "count": 2}, {"day": "Tue", "count": 4},
+        {"day": "Wed", "count": 1}, {"day": "Thu", "count": 5},
+        {"day": "Fri", "count": 3}, {"day": "Sat", "count": 2},
+        {"day": "Sun", "count": 1},
+    ],
+}
+
+
 @app.route("/health", methods=["GET"])
 def health_check():
-    status = {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    status = {"status": "healthy", "timestamp": datetime.now().isoformat(), "demo": DEMO_MODE}
     try:
         db = get_db()
         db.cursor().execute("SELECT 1")
@@ -692,7 +742,6 @@ def handle_event_update(data):
 # ===== BACKGROUND TASKS =====
 scheduler = BackgroundScheduler()
 
-@scheduler.job(id="cleanup_old_records", trigger="cron", hour=2, minute=0)
 def cleanup_old_records():
     try:
         conn = psycopg2.connect(app.config["DATABASE_URL"])
@@ -706,6 +755,14 @@ def cleanup_old_records():
         logger.info(f"Cleanup: removed {deleted_r} recordings, {deleted_e} events")
     except Exception as e:
         logger.error(f"Cleanup error: {e}")
+
+scheduler.add_job(
+    id="cleanup_old_records",
+    func=cleanup_old_records,
+    trigger="cron",
+    hour=2,
+    minute=0,
+)
 
 scheduler.start()
 
