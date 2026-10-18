@@ -17,7 +17,15 @@ const RECORD = process.env.RECORD === "1";
 
 // Edit this list per project: one entry per screen worth showing.
 const PAGES = [
-  { name: "dashboard", path: "/", waitFor: "#app-ready" },
+  { name: "login", path: "/login", waitFor: ".login-card" },
+  // Dashboard requires auth: sign in through the real UI first.
+  {
+    name: "dashboard",
+    path: "/dashboard",
+    waitFor: ".streams-grid",
+    login: { user: "demo", pass: "demo", submit: ".cyber-button" },
+  },
+  { name: "timeline", path: "/timeline", waitFor: ".content", login: { reuse: true } },
 ];
 
 const FORBIDDEN = [
@@ -53,6 +61,15 @@ let failed = false;
 for (const p of PAGES) {
   const page = await context.newPage();
   await page.goto(new URL(p.path, BASE).toString(), { waitUntil: "networkidle" });
+
+  // Protected routes redirect to /login — sign in through the real UI.
+  if (p.login && page.url().includes("/login")) {
+    await page.fill('input[type="text"]', p.login.user || "demo");
+    await page.fill('input[type="password"]', p.login.pass || "demo");
+    await page.click(p.login.submit || 'button[type="submit"]');
+    await page.waitForURL("**/dashboard", { timeout: 15000 });
+  }
+
   if (p.waitFor) await page.waitForSelector(p.waitFor, { timeout: 15000 });
 
   const text = (await page.evaluate(() => document.body.innerText)) + "\n" + (await page.title());

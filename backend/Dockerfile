@@ -1,6 +1,6 @@
 # =============================================================================
-# SentryView Backend — Flask + Gunicorn + Eventlet
-# Tag convention: jorahone/sentryview-backend:latest
+# vidara Backend — Flask + Gunicorn + Eventlet
+# Tag convention: ghcr.io/onebyjorah/vidara-backend:latest
 # =============================================================================
 FROM python:3.11-slim AS builder
 
@@ -36,19 +36,19 @@ COPY . .
 
 # Create directories and non-root user
 RUN mkdir -p /recordings /events /var/backups/rtsp-nvr /var/log/rtsp-nvr/backend && \
-    addgroup --system --gid 1001 sentryview && \
-    adduser --system --uid 1001 --ingroup sentryview --no-create-home sentryview && \
-    chown -R sentryview:sentryview /app /recordings /events /var/backups/rtsp-nvr /var/log/rtsp-nvr
+    addgroup --system --gid 1001 vidara && \
+    adduser --system --uid 1001 --ingroup vidara --no-create-home vidara && \
+    chown -R vidara:vidara /app /recordings /events /var/backups/rtsp-nvr /var/log/rtsp-nvr
 
-USER sentryview
+USER vidara
 
 EXPOSE 5000
 
 HEALTHCHECK --interval=30s --timeout=10s --retries=5 --start-period=30s \
     CMD wget --spider -q http://localhost:5000/health || exit 1
 
-LABEL org.opencontainers.image.title="SentryView Backend" \
-      org.opencontainers.image.description="Flask backend for SentryView RTSP NVR" \
+LABEL org.opencontainers.image.title="vidara Backend" \
+      org.opencontainers.image.description="Flask backend for vidara RTSP NVR" \
       org.opencontainers.image.vendor="JorahOne" \
       org.opencontainers.image.version="2.1.0"
 
