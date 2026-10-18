@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 function Login({ onSuccess }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [demo, setDemo] = useState(false);
+
+  useEffect(() => {
+    fetch('/health').then(r => r.json()).then(h => setDemo(!!h.demo)).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,6 +39,7 @@ function Login({ onSuccess }) {
     <div className="login-container">
       <div className="card cyber-border login-card">
         <h2 className="cyber-text glow login-title">Login</h2>
+        {demo && <div className="alert alert-info">Demo mode is on — sign in with any username and password.</div>}
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -48,7 +54,7 @@ function Login({ onSuccess }) {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-        <p className="login-hint">Default: admin / admin</p>
+        <p className="login-hint">No default admin — create the first user via POST /api/auth/register.</p>
       </div>
     </div>
   );

@@ -40,3 +40,9 @@ Instructions for AI coding agents (OpenCode, Freebuff/Codebuff, Hermes workers, 
 ## Skills
 
 Reusable procedures live in `.agents/skills/`: `repo-polish`, `readme-writer`, `dockerize`, `screenshot-capture`, `security-scrub`, `pr-workflow`, `release-checklist`. Load the one that matches your task.
+
+## Demo mode
+
+`DEMO_MODE=1` (compose default) makes the backend serve obviously-fake cameras
+(RFC 5737 `192.0.2.x`) and accept any login. The FFmpeg worker only starts with
+`docker compose --profile live up -d`.
