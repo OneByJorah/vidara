@@ -4,8 +4,6 @@
 
 # SentryView
 
-
-
 [![GitHub release](https://img.shields.io/github/v/release/OneByJorah/SentryView?color=a78bfa&label=release&logo=github)](https://github.com/OneByJorah/SentryView/releases)
 [![PyPI version](https://img.shields.io/pypi/v/sentryview?color=a78bfa&label=pip&logo=pypi)](https://pypi.org/project/sentryview/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
